@@ -1,0 +1,136 @@
+{% extends 'layout.html' %}
+
+{% block maincontent %}
+<div id="interface">
+	<div class="row">
+		<div class="form-group col-lg-4">
+			<label class="form-control-label" for="date">Date</label>
+			<input class="form-control" id="date" name="date" type="date" value="{{ current_date }}" />
+		</div>
+		<div class="form-group col-lg-4">
+			<label class="form-control-label" for="tg">Talk Group</label>
+			<select class="form-control" id="tg" name="tg">
+				<option value="">All Calls</option>
+				{% for system in all_systems %}
+					<optgroup label="{{ system.shortName }}">
+						{% for talkgroup in system.getTalkGroups() %}
+							<option value="{{ talkgroup.TGID }}">{{ talkgroup.tag }} ({{ talkgroup.TGID }}, {{ talkgroup.mode }})</option>
+						{% endfor %}
+					</optgroup>
+				{% else %}
+					<option disabled>No systems found?</option>
+				{% endfor %}
+			</select>
+		</div>
+		<div class="form-group col-lg-4">
+			<label class="form-control-label">Controls</label>
+			<button class="btn btn-primary btn-block" type="button" onclick="updateFiles(true)">Filter</button>
+		</div>
+	</div>
+	<div class="row">
+		<div class="form-group col-lg-12"><button class="btn btn-primary btn-block" onclick="window.scrollTo(0, document.body.scrollHeight);">Jump to bottom</button>Click on a row to begin sequential playback. Click file size to download.</div>
+	</div>
+</div>
+<table class="table" id="calls_table">
+	<thead>
+		<tr>
+			<td>Time</td>
+			<td>Talk Group</td>
+			<td>MHz</td>
+			<td>Size</td>
+		</tr>
+	</thead>
+	<tbody>
+
+	</tbody>
+</table>
+
+		<script>
+			var latest = 0;
+			var template = Handlebars.compile(`
+				<tr>
+					<td>{\{ date }}</td>
+					<td>{\{ talkgroup }}</td>
+					<td>{\{ frequency }}</td>
+					<td><a href="{\{ path }}">{\{ size_kb }}k</a></td>
+				</tr>
+			`);
+			var last_played = 0;
+			var auto_play_new_row = false;
+
+			$(function () {
+				updateFiles();
+				setInterval(updateFiles, 10*1000);
+				$('#tg').select2();
+
+				$('#calls_table tr').on('click', onClickTableRow);
+
+				$('#audio_player').on('ended', function () {
+					var current_row = $('#calls_table .table-active')[0];
+
+					var next_row = $(current_row).closest('tr').next('tr');
+					if (next_row.length > 0)
+					{
+						playAudioFromRow(next_row[0]);
+					}
+					else
+					{
+						auto_play_new_row = true;
+					}
+				});
+			});
+
+			function updateFiles(clear_files=false)
+			{
+				if (clear_files)
+				{
+					$('#audio_player').trigger('stop');
+					$('#calls_table tr').remove();
+					latest = 0;
+				}
+				$.ajax({
+					url: window.location.pathname,
+					data: {
+						'since': latest,
+						'tg': $('#tg').val(),
+						'date': $('#date').val(),
+					},
+					success: function (data, textStatus, jqXHR) {
+						if (data.latest == 0 || data.newfiles.length == 0) return;
+
+						console.log(data);
+						$(data.newfiles).each(function (i, newcall) {
+							console.log(newcall);
+							var new_row_html = template(newcall);
+							var new_row_ref = $(new_row_html).appendTo($('#calls_table tbody'));
+							if (auto_play_new_row)
+							{
+								auto_play_new_row = false;
+								playAudioFromRow(new_row_ref);
+							}
+						});
+						latest = data.latest;
+
+						// refresh click handlers to account for new rows
+						$('#calls_table tr').off();
+						$('#calls_table tr').on('click', onClickTableRow);
+					}
+				});
+			}
+
+			function onClickTableRow()
+			{
+				playAudioFromRow(this);
+			}
+
+			function playAudioFromRow(row)
+			{
+				$('#calls_table .table-active').removeClass('table-active');
+				$(row).addClass('table-active');
+
+				var dllink = $($(row).find('a')[0])
+				$('#audio_player').attr('src', dllink.attr('href'));
+				$('#audio_player').trigger('play');
+			}
+		</script>
+{% endblock %}
