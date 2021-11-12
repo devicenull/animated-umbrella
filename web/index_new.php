@@ -6,6 +6,11 @@ if (isset($_REQUEST['since']))
 	$filter_date = (isset($_GET['date'])) ? new DateTimeImmutable($_GET['date']) : new DateTimeImmutable();
 	$filter_tg = (empty($_GET['tg'])) ? null : $_GET['tg'];
 
+	if (!is_array($filter_tg))
+	{
+		$filter_tg = [$filter_tg];
+	}
+
 	$latest_file = 0;
 
 	$newcalls = [];
@@ -13,16 +18,20 @@ if (isset($_REQUEST['since']))
 	{
 		foreach ($system->getCalls() as $call)
 		{
-			$curcall = $call->getPublicData();
-			if ($_REQUEST['since'] > 0 && $curcall['unix_date'] < $_REQUEST['since'])
+			if ($_REQUEST['since'] > 0 && $call['unix_date'] < $_REQUEST['since'])
 			{
 				continue;
 			}
 
-			$newcalls[] = $curcall;
-			if ($curcall['unix_date'] > $latest_file)
+			if (!empty($filter_tg) && !in_array($call['TGID'], $filter_tg))
 			{
-				$latest_file = $curcall['unix_date'];
+				continue;
+			}
+
+			$newcalls[] = $call->getPublicData();
+			if ($call['unix_date'] > $latest_file)
+			{
+				$latest_file = $call['unix_date'];
 			}
 		}
 	}

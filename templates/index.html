@@ -9,12 +9,12 @@
 		</div>
 		<div class="form-group col-lg-4">
 			<label class="form-control-label" for="tg">Talk Group</label>
-			<select class="form-control" id="tg" name="tg">
+			<select class="form-control" id="tg" name="tg" multiple="multiple">
 				<option value="">All Calls</option>
 				{% for system in all_systems %}
 					<optgroup label="{{ system.shortName }}">
 						{% for talkgroup in system.getTalkGroups() %}
-							<option value="{{ talkgroup.TGID }}">{{ talkgroup.tag }} ({{ talkgroup.TGID }}, {{ talkgroup.mode }})</option>
+							<option value="{{ talkgroup.TGID }}">{{ talkgroup.alpha_tag }} ({{ talkgroup.TGID }}, {{ talkgroup.mode }})</option>
 						{% endfor %}
 					</optgroup>
 				{% else %}
