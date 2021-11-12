@@ -14,6 +14,11 @@ if (isset($_REQUEST['since']))
 		foreach ($system->getCalls() as $call)
 		{
 			$curcall = $call->getPublicData();
+			if ($_REQUEST['since'] > 0 && $curcall['unix_date'] < $_REQUEST['since'])
+			{
+				continue;
+			}
+
 			$newcalls[] = $curcall;
 			if ($curcall['unix_date'] > $latest_file)
 			{
@@ -30,7 +35,7 @@ if (isset($_REQUEST['since']))
 	$newcalls = array_slice($newcalls, -100);
 	Header('Content-Type: application/json');
 	echo json_encode([
-		'latest'   => strtotime($latest_file),
+		'latest'   => $latest_file,
 		'newfiles' => $newcalls,
 	]);
 	exit();

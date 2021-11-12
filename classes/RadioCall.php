@@ -54,7 +54,7 @@ class RadioCall extends BaseDBObject
 			'path'      => $this->getHTTPPath(),
 			'size_kb'   => $this['size_kb'],
 			'talkgroup' => $description,
-			'unix_date' => $this['date'],
+			'unix_date' => $this['unix_date'],
 			'date'      => strftime('%F %T', $this['unix_date']),
 			'frequency' => ($this['frequency'] / 1000000),
 		];
