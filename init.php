@@ -35,6 +35,10 @@ if (file_exists(CONFIG_FILE))
 		displayError('No systems configured?');
 	}
 }
+else
+{
+	displayError(CONFIG_FILE.' doesn\'t exist');
+}
 
 function hasEditAuth(): bool
 {
