@@ -7,6 +7,7 @@ class RadioCall extends BaseDBObject
 		'TGID',
 		'unix_date',
 		'frequency',
+		'RadioSystem',
 	];
 	const DB_KEY = 'absolute_path';
 	
@@ -40,10 +41,19 @@ class RadioCall extends BaseDBObject
 
 	public function getPublicData(): array
 	{
+		$tg = $this['RadioSystem']->getTalkGroup($this['TGID']);
+		if ($tg && $tg->isInitialized())
+		{
+			$description = $tg['alpha_tag'].' ('.$this['TGID'].')';
+		}
+		else
+		{
+			$description = $this['TGID'];
+		}
 		return [
 			'path'      => $this->getHTTPPath(),
 			'size_kb'   => $this['size_kb'],
-			'talkgroup' => $this['TGID'],
+			'talkgroup' => $description,
 			'unix_date' => $this['date'],
 			'date'      => strftime('%F %T', $this['unix_date']),
 			'frequency' => ($this['frequency'] / 1000000),

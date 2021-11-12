@@ -8,25 +8,30 @@ if (isset($_REQUEST['since']))
 
 	$latest_file = 0;
 
-	$json = [];
+	$newcalls = [];
 	foreach (RadioSystem::getAll() as $system)
 	{
 		foreach ($system->getCalls() as $call)
 		{
 			$curcall = $call->getPublicData();
-			$json[] = $curcall;
+			$newcalls[] = $curcall;
 			if ($curcall['unix_date'] > $latest_file)
 			{
 				$latest_file = $curcall['unix_date'];
 			}
 		}
 	}
-	$json = array_slice($json, -100);
-	//ksort($files);
+	usort($newcalls, function ($a, $b)
+	{
+		if ($a['unix_date'] == $b['unix_date']) return 0;
+		return ($a['unix_date'] < $b['unix_date']) ? -1 : 1;
+	});
+
+	$newcalls = array_slice($newcalls, -100);
 	Header('Content-Type: application/json');
 	echo json_encode([
 		'latest'   => strtotime($latest_file),
-		'newfiles' => $json,
+		'newfiles' => $newcalls,
 	]);
 	exit();
 }
