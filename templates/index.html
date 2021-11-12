@@ -59,6 +59,12 @@
 			var auto_play_new_row = false;
 
 			$(function () {
+				if (location.hash != '')
+				{
+					$('#tg').val(location.hash.replace('#', '').split(','));
+					$('#tg').trigger('change');
+				}
+
 				updateFiles();
 				setInterval(updateFiles, 10*1000);
 				$('#tg').select2();
@@ -87,6 +93,8 @@
 					$('#audio_player').trigger('stop');
 					$('#calls_table tr').remove();
 					latest = 0;
+
+					location.hash = ($('#tg').val()).join(",");
 				}
 				$.ajax({
 					url: window.location.pathname,
@@ -98,7 +106,6 @@
 					success: function (data, textStatus, jqXHR) {
 						if (data.latest == 0 || data.newfiles.length == 0) return;
 
-						console.log(data);
 						$(data.newfiles).each(function (i, newcall) {
 							console.log(newcall);
 							var new_row_html = template(newcall);

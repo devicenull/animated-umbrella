@@ -4,7 +4,7 @@ require(__DIR__.'/../init.php');
 if (isset($_REQUEST['since']))
 {
 	$filter_date = (isset($_GET['date'])) ? new DateTimeImmutable($_GET['date']) : new DateTimeImmutable();
-	$filter_tg = (empty($_GET['tg'])) ? null : $_GET['tg'];
+	$filter_tg = (empty($_GET['tg'])) ? [] : $_GET['tg'];
 
 	if (!is_array($filter_tg))
 	{
@@ -18,7 +18,7 @@ if (isset($_REQUEST['since']))
 	{
 		foreach ($system->getCalls() as $call)
 		{
-			if ($_REQUEST['since'] > 0 && $call['unix_date'] < $_REQUEST['since'])
+			if ($_REQUEST['since'] > 0 && $call['unix_date'] <= $_REQUEST['since'])
 			{
 				continue;
 			}
