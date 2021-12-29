@@ -3,7 +3,7 @@ require(__DIR__.'/../init.php');
 
 if (isset($_REQUEST['since']))
 {
-	$filter_date = (isset($_GET['date'])) ? new DateTimeImmutable($_GET['date']) : new DateTimeImmutable();
+	$filter_date = (isset($_GET['date'])) ? strtotime($_GET['date']) : strtotime(strftime('%F'));
 	$filter_tg = (empty($_GET['tg'])) ? [] : $_GET['tg'];
 
 	if (!is_array($filter_tg))
@@ -16,30 +16,16 @@ if (isset($_REQUEST['since']))
 	$newcalls = [];
 	foreach (RadioSystem::getAll() as $system)
 	{
-		foreach ($system->getCalls() as $call)
+		foreach ($system->getCalls($filter_tg, $_REQUEST['since']) as $call)
 		{
-			if ($_REQUEST['since'] > 0 && $call['unix_date'] <= $_REQUEST['since'])
-			{
-				continue;
-			}
-
-			if (!empty($filter_tg) && !in_array($call['TGID'], $filter_tg))
-			{
-				continue;
-			}
-
 			$newcalls[] = $call->getPublicData();
-			if ($call['unix_date'] > $latest_file)
+
+			if (strtotime($call['call_date']) > $latest_file)
 			{
-				$latest_file = $call['unix_date'];
+				$latest_file = strtotime($call['call_date']);
 			}
 		}
 	}
-	usort($newcalls, function ($a, $b)
-	{
-		if ($a['unix_date'] == $b['unix_date']) return 0;
-		return ($a['unix_date'] < $b['unix_date']) ? -1 : 1;
-	});
 
 	$newcalls = array_slice($newcalls, -100);
 	Header('Content-Type: application/json');

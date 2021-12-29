@@ -2,21 +2,20 @@
 class RadioCall extends BaseDBObject
 {
 	const DB_FIELDS = [
+		'CALLID',
 		'absolute_path',
 		'size_kb',
 		'TGID',
-		'unix_date',
+		'call_date',
 		'frequency',
-		'RadioSystem',
+		'SYSTEMID',
 	];
-	const DB_KEY = 'absolute_path';
-	
-	//const DB_TABLE = '??';
+	const DB_KEY = 'CALLID';
+	const DB_TABLE = 'radio_call';
 
 	const FILE_TYPE = 'm4a';
 
 	var $virtual_fields = [
-		'date',
 	];
 
 	public function getHTTPPath(): string
@@ -29,22 +28,15 @@ class RadioCall extends BaseDBObject
 		return $http_path;
 	}
 
-	public function get($key): string
-	{
-		if ($key == 'date')
-		{
-			return strftime('%F %T', $this['unix_date']);
-		}
-
-		return parent::get($key);
-	}
-
 	public function getPublicData(): array
 	{
-		$tg = $this['RadioSystem']->getTalkGroup($this['TGID']);
+		$tg = new TalkGroup([
+			'SYSTEMID' => $this['SYSTEMID'],
+			'TGID'     => $this['TGID'],
+		]);
 		if ($tg && $tg->isInitialized())
 		{
-			$description = $tg['alpha_tag'].' ('.$this['TGID'].')';
+			$description = $tg->getDescription();
 		}
 		else
 		{
@@ -54,8 +46,7 @@ class RadioCall extends BaseDBObject
 			'path'      => $this->getHTTPPath(),
 			'size_kb'   => $this['size_kb'],
 			'talkgroup' => $description,
-			'unix_date' => $this['unix_date'],
-			'date'      => strftime('%F %T', $this['unix_date']),
+			'call_date' => $this['call_date'],
 			'frequency' => ($this['frequency'] / 1000000),
 		];
 	}

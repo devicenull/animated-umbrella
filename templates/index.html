@@ -12,7 +12,7 @@
 			<select class="form-control" id="tg" name="tg" multiple="multiple">
 				<option value="">All Calls</option>
 				{% for system in all_systems %}
-					<optgroup label="{{ system.shortName }}">
+					<optgroup label="{{ system.name }}">
 						{% for talkgroup in system.getTalkGroups() %}
 							<option value="{{ talkgroup.TGID }}">{{ talkgroup.alpha_tag }} ({{ talkgroup.TGID }}, {{ talkgroup.mode }})</option>
 						{% endfor %}
@@ -49,7 +49,7 @@
 			var latest = 0;
 			var template = Handlebars.compile(`
 				<tr>
-					<td>{\{ date }}</td>
+					<td>{\{ call_date }}</td>
 					<td>{\{ talkgroup }}</td>
 					<td>{\{ frequency }}</td>
 					<td><a href="{\{ path }}">{\{ size_kb }}k</a></td>

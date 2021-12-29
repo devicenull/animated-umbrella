@@ -2,39 +2,44 @@
 class RadioSystem extends BaseDBObject
 {
 	const DB_FIELDS = [
-		'shortName',
-		'talkgroupsFile',
+		'SYSTEMID',
+		'name',
+		'last_talkgroup_update',
+		'talkgroup_path',
 	];
-	const DB_KEY = 'shortName'; // lol this sucks
-
-	private $talkgroups = [];
-
-	//const DB_TABLE = '??';
+	const DB_KEY = 'SYSTEMID';
+	const DB_TABLE = 'radio_system';
 
 	public function getTalkGroups(): iterable
 	{
-		if (empty($this->talkgroups))
+		//FIXME: should be under TalkGroup?
+		global $db;
+		$res = $db->Execute('
+			select *
+			from talk_group
+			where SYSTEMID=?
+			order by TGID DESC
+			', [
+				$this['SYSTEMID']
+			],
+		);
+		$tgs = [];
+		foreach ($res as $cur)
 		{
-			$this->_loadTalkGroups();
+			$tgs[] = new TalkGroup(['record' => $cur]);
 		}
-		return $this->talkgroups;
+
+		return $tgs;
 	}
 
-	public function getTalkGroup($TGID): ?TalkGroup
+	/**
+	*	parse talkgroup config file, add/update talkgroups as necessary
+	*/
+	public function refreshTalkGroups(): void
 	{
-		if (empty($this->talkgroups))
+		foreach (explode("\n", file_get_contents($this['talkgroup_path'])) as $tgline)
 		{
-			$this->_loadTalkGroups();
-		}
-
-		return $this->talkgroups[$TGID] ?? null;
-	}
-
-	protected function _loadTalkGroups(): void
-	{
-		$this->talkgroups = [];
-		foreach (explode("\n", file_get_contents($this['talkgroupsFile'])) as $tgline)
-		{
+			// Decimal,Hex,Alpha Tag,Mode,Description,Tag,Category
 			$tgline = trim($tgline);
 			// == 0 is correct - we want to check if the line starts with it
 			if ($tgline == '' || stripos($tgline, 'Decimal') === 0)
@@ -42,63 +47,79 @@ class RadioSystem extends BaseDBObject
 				continue;
 			}
 
-			$talkgroup = TalkGroup::createFromCSVLine($tgline);
-			$this->talkgroups[$talkgroup['TGID']] = $talkgroup;
-		}
-	}
-
-	public function getCalls(): iterable
-	{
-		global $config_json;
-
-		$calls = [];
-		$directory = new RecursiveDirectoryIterator($config_json['captureDir'].'/'.$this['shortName']);
-		$iterator = new RecursiveIteratorIterator($directory);
-		foreach ($iterator as $file)
-		{
-			if ($file->getExtension() != RadioCall::FILE_TYPE)
-			{
-				continue;
-			}
-
-			// parse filename to retrieve info about the call
-			$basename = $file->getBaseName('.'.RadioCall::FILE_TYPE);
-			[$TGID, $TIME, $FREQ] = preg_split('/[-_]/', $basename);
-
-			if ($file->getSize() < 1024)
-			{
-				// Filtered because they will produce an error when attempting playback.
-				continue;
-			}
-
+			$columns = explode(',', $tgline);
 			$params = [
-				'absolute_path' => $file->getPath().'/'.$file->getFileName(),
-				'size_kb'       => round($file->getSize() / 1024),
-				'TGID'          => $TGID,
-				'unix_date'     => $TIME,
-				'frequency'     => $FREQ,
-				'RadioSystem'   => $this,
+				'SYSTEMID'     => $this['SYSTEMID'],
+				'TGID'         => $columns[0],
+				// TGID_hex $csv_line[1] (unused)
+				'alpha_tag'    => $columns[2],
+				'mode'         => $columns[3],
+				'description'  => $columns[4],
+				'tag'          => $columns[5],
+				'category'     => $columns[6],
 			];
 
-			$calls[] = new RadioCall(['record' => $params]);
+			$tg = new TalkGroup([
+				'SYSTEMID' => $this['SYSTEMID'],
+				'TGID'     => $params['TGID'],
+			]);
+			if ($tg->isInitialized())
+			{
+				unset($params['TGID']);
+				unset($params['SYSTEMID']);
+
+				$tg->set($params);
+			}
+			else
+			{
+				$tg->add($params);
+			}
+		}
+
+		$this->set(['last_talkgroup_update' => strftime('%F %T')]);
+	}
+
+	public function getCalls(iterable $filter_tgids=[], int $since=0, int $limit=100): iterable
+	{
+		global $db;
+
+		$sql = 'select * from radio_call where SYSTEMID=?';
+		$params = [$this['SYSTEMID']];
+		if (!empty($filter_tgids))
+		{
+			$sql .= ' and TGID in ('.implode(',', array_map('intVal', $filter_tgids)).')';
+		}
+		if ($since != 0)
+		{
+			$sql .= 'and call_date > ?';
+			$params[] = strftime('%F %T', $since);
+		}
+
+		$sql .= ' order by call_date asc';
+		$sql .= ' limit '.intVal($limit);
+		$res = $db->Execute($sql, $params);
+		$calls = [];
+		foreach ($res as $cur)
+		{
+			$calls[] = new RadioCall(['record' => $cur]);
 		}
 		return $calls;
 	}
 
 	public static function getAll(): iterable
 	{
-		global $config_json;
-
-		$return = [];
-		foreach ($config_json['systems'] as $system)
+		global $db;
+		$res = $db->Execute('
+			select *
+			from radio_system
+			order by SYSTEMID DESC
+		');
+		$systems = [];
+		foreach ($res as $cur)
 		{
-			$record = [
-				'shortName'      => $system['shortName'],
-				'talkgroupsFile' => $system['talkgroupsFile'],
-			];
-			$return[] = new RadioSystem(['record' => $record]);
+			$systems[] = new RadioSystem(['record' => $cur]);
 		}
 
-		return $return;
+		return $systems;
 	}
 }

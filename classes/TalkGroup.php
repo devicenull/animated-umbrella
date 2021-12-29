@@ -2,36 +2,36 @@
 class TalkGroup extends BaseDBObject
 {
 	const DB_FIELDS = [
+		// FIXME: add support for multiple columns in DB_KEY and drop this
+		'our_talkgroupid',
+		'SYSTEMID',
 		'TGID',
 		'alpha_tag',
 		'mode',
 		'description',
-		'tag',
+		// yep, could be another table, but for a few hundred rows, who cares?
 		'category',
 	];
-	const DB_KEY = 'TGID';
+	const DB_KEY = 'our_talkgroupid';
+	const DB_TABLE = 'talk_group';
 
-	//const DB_TABLE = '??';
-
-	public static function createFromCSVLine($csv_line): TalkGroup
+	public function __construct($params=[])
 	{
-		/*
-			Decimal,Hex,Alpha Tag,Mode,Description,Tag,Category
-			1037,40d,EC DOC T1,D,County DOC Transport 1,Corrections,Essex County
-		*/
-		// TODO: add support for trunk-recorder format
-		$columns = explode(',', $csv_line);
-		$params = [
-			'TGID'         => $columns[0],
-			// TGID_hex $csv_line[1] (unused)
-			'alpha_tag'    => $columns[2],
-			'mode'         => $columns[3],
-			'descriptiopn' => $columns[4],
-			'tag'          => $columns[5],
-			'category'     => $columns[6],
-		];
+		global $db;
+		if (isset($params['SYSTEMID']) && isset($params['TGID']))
+		{
+			$res = $db->Execute('select * from talk_group where SYSTEMID=? and TGID=?', [$params['SYSTEMID'], $params['TGID']]);
+			if ($res->RecordCount() > 0)
+			{
+				$this->record = $res->fields;
+			}
+		}
 
-		return new TalkGroup(['record' => $params]);
+		parent::__construct($params);
 	}
 
+	public function getDescription(): string
+	{
+		return $this['alpha_tag'].' ('.$this['TGID'].')';
+	}
 }
