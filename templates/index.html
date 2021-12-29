@@ -9,6 +9,12 @@
 		</div>
 		<div class="form-group col-lg-4">
 			<label class="form-control-label" for="tg">Talk Group</label>
+			<div style="float:right">
+				<input type="radio" name="tgfilter" id="include_talkgroup" value="include" checked>
+				<label for="include_talkgroup">Include</label>
+				<input type="radio" name="tgfilter" id="exclude_talkgroup" value="exclude">
+				<label for="exclude_talkgroup">Exclude</label>
+			</div>
 			<select class="form-control" id="tg" name="tg" multiple="multiple">
 				<option value="">All Calls</option>
 				{% for system in all_systems %}
@@ -61,7 +67,9 @@
 			$(function () {
 				if (location.hash != '')
 				{
-					$('#tg').val(location.hash.replace('#', '').split(','));
+					tginfo = location.hash.replace('#', '').split(':');
+					$('input[name=tgfilter][value='+tginfo[1]+']').attr('checked', true);
+					$('#tg').val(tginfo[0].split(','));
 					$('#tg').trigger('change');
 				}
 
@@ -94,7 +102,7 @@
 					$('#calls_table tr').remove();
 					latest = 0;
 
-					location.hash = ($('#tg').val()).join(",");
+					location.hash = ($('#tg').val()).join(",") + ":" + $('input[name=tgfilter]:checked').val();
 				}
 				$.ajax({
 					url: window.location.pathname,
@@ -102,12 +110,12 @@
 						'since': latest,
 						'tg': $('#tg').val(),
 						'date': $('#date').val(),
+						'tgfilter': $('input[name=tgfilter]:checked').val(),
 					},
 					success: function (data, textStatus, jqXHR) {
 						if (data.latest == 0 || data.newfiles.length == 0) return;
 
 						$(data.newfiles).each(function (i, newcall) {
-							console.log(newcall);
 							var new_row_html = template(newcall);
 							var new_row_ref = $(new_row_html).appendTo($('#calls_table tbody'));
 							if (auto_play_new_row)

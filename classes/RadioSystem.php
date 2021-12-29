@@ -79,7 +79,7 @@ class RadioSystem extends BaseDBObject
 		$this->set(['last_talkgroup_update' => strftime('%F %T')]);
 	}
 
-	public function getCalls(iterable $filter_tgids=[], int $since=0, int $limit=100): iterable
+	public function getCalls(string $filter_type='include', iterable $filter_tgids=[], int $since=0, int $limit=100): iterable
 	{
 		global $db;
 
@@ -87,7 +87,9 @@ class RadioSystem extends BaseDBObject
 		$params = [$this['SYSTEMID']];
 		if (!empty($filter_tgids))
 		{
-			$sql .= ' and TGID in ('.implode(',', array_map('intVal', $filter_tgids)).')';
+			$query_extra = '';
+			if ($filter_type == 'exclude') $query_extra = ' NOT ';
+			$sql .= ' and TGID '.$query_extra.' in ('.implode(',', array_map('intVal', $filter_tgids)).')';
 		}
 		if ($since != 0)
 		{

@@ -5,6 +5,7 @@ if (isset($_REQUEST['since']))
 {
 	$filter_date = (isset($_GET['date'])) ? strtotime($_GET['date']) : strtotime(strftime('%F'));
 	$filter_tg = (empty($_GET['tg'])) ? [] : $_GET['tg'];
+	$filter_include = $_GET['tgfilter'] ?? 'include';
 
 	if (!is_array($filter_tg))
 	{
@@ -16,7 +17,7 @@ if (isset($_REQUEST['since']))
 	$newcalls = [];
 	foreach (RadioSystem::getAll() as $system)
 	{
-		foreach ($system->getCalls($filter_tg, $_REQUEST['since']) as $call)
+		foreach ($system->getCalls($filter_include, $filter_tg, $_REQUEST['since']) as $call)
 		{
 			$newcalls[] = $call->getPublicData();
 
