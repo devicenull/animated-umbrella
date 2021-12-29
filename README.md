@@ -39,7 +39,7 @@ define('CONFIG_FILE', __DIR__.'/../configs/config.json');
 define('HTTP_BASE_PATH', '/home/trunkrecorder');
 
 ```
-** A MySQL database is required (import schema with database.sql).
-** CONFIG_FILE should be the path to your trunk-recorder config.json
+* * A MySQL database is required (import schema with database.sql).
+* * CONFIG_FILE should be the path to your trunk-recorder config.json
 * Update lsyncd.conf to have the right path to your audio recordings
 * Make sure lsyncd is running (`/usr/bin/lsyncd /home/trunkrecorder/ui/lsyncd.conf`)
