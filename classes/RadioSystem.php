@@ -96,6 +96,23 @@ class RadioSystem extends BaseDBObject
 			$sql .= 'and call_date > ?';
 			$params[] = strftime('%F %T', $since);
 		}
+		else
+		{
+			/**
+			*	Figure out what ID to start from to avoid returning too many records - there isn't
+			*	a great way to do this with a single query
+			*/
+
+			$sql2 = $sql.' order by call_date desc';
+			$sql2 .= ' limit '.intVal($limit).', 1';
+			$res = $db->Execute($sql2, $params);
+			if ($res->RecordCount() > 0)
+			{
+				$sql .= ' and CALLID > ?';
+				$params[] = $res->fields['CALLID'];
+			}
+
+		}
 
 		$sql .= ' order by call_date asc';
 		$sql .= ' limit '.intVal($limit);

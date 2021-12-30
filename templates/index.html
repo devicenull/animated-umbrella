@@ -126,6 +126,8 @@
 						});
 						latest = data.latest;
 
+						// remove everything except the latest 300 calls
+						$('#calls_table tbody tr:nth-last-child(n+300)').remove()
 						// refresh click handlers to account for new rows
 						$('#calls_table tr').off();
 						$('#calls_table tr').on('click', onClickTableRow);
