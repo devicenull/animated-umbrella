@@ -79,7 +79,7 @@ class RadioSystem extends BaseDBObject
 		$this->set(['last_talkgroup_update' => strftime('%F %T')]);
 	}
 
-	public function getCalls(string $filter_type='include', iterable $filter_tgids=[], int $since=0, int $limit=100): iterable
+	public function getCalls(string $filter_type='include', iterable $filter_tgids=[], int $since=0, int $limit=MAX_CALLS_PER_PAGE): iterable
 	{
 		global $db;
 

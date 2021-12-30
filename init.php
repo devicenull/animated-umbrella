@@ -24,6 +24,8 @@ require_once(__DIR__.'/config.php');
 // only one radio system supported currently!
 define('SYSTEMID_DEFAULT', 1);
 
+define('MAX_CALLS_PER_PAGE', 300);
+
 require_once(__DIR__.'/vendor/adodb/adodb-php/adodb.inc.php');
 $db = newAdoConnection('mysqli');
 $db->connect(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME);

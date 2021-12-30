@@ -38,8 +38,9 @@ if (isset($_REQUEST['since']))
 }
 
 $params = [
-	'current_date' => strftime('%F'),
-	'all_systems'  => RadioSystem::getAll(),
+	'current_date'       => strftime('%F'),
+	'all_systems'        => RadioSystem::getAll(),
+	'MAX_CALLS_PER_PAGE' => MAX_CALLS_PER_PAGE,
 ];
 
 displayPage('index.html', $params);
