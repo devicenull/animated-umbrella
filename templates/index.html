@@ -3,12 +3,19 @@
 {% block maincontent %}
 <div id="interface">
 	<div class="row">
-		<div class="form-group col-lg-4">
+		<div class="form-group col-lg-6">
 			<label class="form-control-label" for="date">Date</label>
 			<input class="form-control" id="date" name="date" type="date" value="{{ current_date }}" />
 		</div>
-		<div class="form-group col-lg-4">
-			<label class="form-control-label" for="tg">Talk Group</label>
+
+		<div class="form-group col-lg-6">
+			<label class="form-control-label">Controls</label>
+			<button class="btn btn-primary btn-block" type="button" onclick="updateFiles(true)">Filter</button>
+		</div>
+	</div>
+	<div class="row">
+		<div class="form-group col-lg-12">
+			<label class="form-control-label" for="tg">Talk Groups</label>
 			<div style="float:right">
 				<input type="radio" name="tgfilter" id="include_talkgroup" value="include" checked>
 				<label for="include_talkgroup">Include</label>
@@ -18,7 +25,7 @@
 			<select class="form-control" id="tg" name="tg" multiple="multiple">
 				<option value="">All Calls</option>
 				{% for system in all_systems %}
-					<optgroup label="{{ system.name }}">
+					<optgroup label="{{ system.system_name }}">
 						{% for talkgroup in system.getTalkGroups() %}
 							<option value="{{ talkgroup.TGID }}">{{ talkgroup.alpha_tag }} ({{ talkgroup.TGID }}, {{ talkgroup.mode }})</option>
 						{% endfor %}
@@ -28,10 +35,6 @@
 				{% endfor %}
 			</select>
 		</div>
-		<div class="form-group col-lg-4">
-			<label class="form-control-label">Controls</label>
-			<button class="btn btn-primary btn-block" type="button" onclick="updateFiles(true)">Filter</button>
-		</div>
 	</div>
 	<div class="row">
 		<div class="form-group col-lg-12"><button class="btn btn-primary btn-block" onclick="window.scrollTo(0, document.body.scrollHeight);">Jump to bottom</button>Click on a row to begin sequential playback. Click file size to download.</div>
@@ -40,6 +43,7 @@
 <table class="table" id="calls_table" style="margin-bottom: 100px;">
 	<thead>
 		<tr>
+			<td>System</td>
 			<td>Time</td>
 			<td>Talk Group</td>
 			<td>MHz</td>
@@ -55,6 +59,7 @@
 			var latest = 0;
 			var template = Handlebars.compile(`
 				<tr>
+					<td>{\{ system_name }}</td>
 					<td>{\{ call_date }}</td>
 					<td>{\{ talkgroup }}</td>
 					<td>{\{ frequency }}</td>

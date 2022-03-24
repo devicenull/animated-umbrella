@@ -19,7 +19,9 @@ if (isset($_REQUEST['since']))
 	{
 		foreach ($system->getCalls($filter_include, $filter_tg, $_REQUEST['since']) as $call)
 		{
-			$newcalls[] = $call->getPublicData();
+			$newdata = $call->getPublicData();
+			$newdata['system_name'] = $system['system_name'];
+			$newcalls[] = $newdata;
 
 			if (strtotime($call['call_date']) > $latest_file)
 			{
@@ -28,7 +30,9 @@ if (isset($_REQUEST['since']))
 		}
 	}
 
-	$newcalls = array_slice($newcalls, -100);
+	usort($newcalls, fn($a,$b) => strtotime($a['call_date']) <=> strtotime($b['call_date']));
+
+	$newcalls = array_slice($newcalls, -300);
 	Header('Content-Type: application/json');
 	echo json_encode([
 		'latest'   => $latest_file,

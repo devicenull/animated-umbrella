@@ -19,6 +19,15 @@ if (filesize($filename) < 1024)
 	exit(0);
 }
 
+$dirinfo = explode('/', str_replace('//', '/', $filename));
+$sysname = $dirinfo[count($dirinfo)-5];
+
+$system = new RadioSystem(['system_name' => $sysname]);
+if (!$system->isInitialized())
+{
+	echo "Unknown system: {$sysname}\n";
+}
+
 $basename = basename($filename, '.'.RadioCall::FILE_TYPE);
 [$TGID, $TIME, $FREQ] = preg_split('/[-_]/', $basename);
 
@@ -28,7 +37,7 @@ $params = [
 	'TGID'          => $TGID,
 	'call_date'     => strftime('%F %T', $TIME),
 	'frequency'     => $FREQ,
-	'SYSTEMID'      => SYSTEMID_DEFAULT,
+	'SYSTEMID'      => $system['SYSTEMID'],
 ];
 
 $call = new RadioCall();
@@ -42,7 +51,6 @@ echo "Call added\n";
 
 // FIXME: should probably just hit radioreference daily, definitely shouldn't be in
 // this script either!
-$system = new RadioSystem(['SYSTEMID' => SYSTEMID_DEFAULT]);
 if (strtotime($system['last_talkgroup_update']) < filemtime($system['talkgroup_path']))
 {
 	$system->refreshTalkGroups();

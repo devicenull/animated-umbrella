@@ -3,12 +3,24 @@ class RadioSystem extends BaseDBObject
 {
 	const DB_FIELDS = [
 		'SYSTEMID',
-		'name',
+		'system_name',
 		'last_talkgroup_update',
 		'talkgroup_path',
 	];
 	const DB_KEY = 'SYSTEMID';
 	const DB_TABLE = 'radio_system';
+
+	public function __construct($params=[])
+	{
+		if (isset($params['system_name']))
+		{
+			$this->construct_by_column('system_name', $params['system_name']);
+		}
+		else
+		{
+			parent::__construct($params);
+		}
+	}
 
 	public function getTalkGroups(): iterable
 	{
